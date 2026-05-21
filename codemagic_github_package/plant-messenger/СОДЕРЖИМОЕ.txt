@@ -1,0 +1,11 @@
+Корень репозитория GitHub (залить всё как есть):
+
+  codemagic.yaml          ← главный файл для Codemagic
+  pubspec.yaml
+  lib/
+  ios/ExportOptions.plist
+  ios/
+  assets/
+  test/
+
+Bundle ID: com.plant.messenger

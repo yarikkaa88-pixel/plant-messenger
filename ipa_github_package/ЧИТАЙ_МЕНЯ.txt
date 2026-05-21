@@ -1,0 +1,46 @@
+═══════════════════════════════════════════════════════════════
+  PLANT — папка для загрузки на GitHub и сборки IPA
+═══════════════════════════════════════════════════════════════
+
+Внутри папки "plant-messenger" — ВСЁ, что нужно залить на GitHub.
+Это не один файл, а готовый проект целиком.
+
+СТРУКТУРА
+─────────
+  plant-messenger/
+    lib/              — код приложения
+    ios/              — настройки iPhone + ExportOptions.plist
+    assets/           — иконка
+    test/             — тесты (нужны для GitHub Actions)
+    .github/          — build_ipa.yml (сборка IPA)
+    pubspec.yaml
+    pubspec.lock
+    .gitignore
+
+БЫСТРЫЙ СТАРТ
+─────────────
+  1. Зайдите в папку plant-messenger
+  2. Отредактируйте ios/ExportOptions.plist (Team ID и имя профиля)
+  3. Залейте на GitHub (команды ниже)
+  4. Добавьте Secrets в GitHub (см. ИНСТРУКЦИЯ.txt)
+  5. Actions → Build iOS IPA → Run workflow
+  6. Скачайте IPA из Artifacts
+
+ЗАЛИТЬ НА GITHUB (PowerShell)
+─────────────────────────────
+  cd plant-messenger
+  git init
+  git add .
+  git commit -m "PLANT app for IPA build"
+  git branch -M main
+  git remote add origin https://github.com/ВАШ_ЛОГИН/plant-messenger.git
+  git push -u origin main
+
+СЕКРЕТЫ APPLE → Base64
+──────────────────────
+  Запустите скрипт: convert_cert_to_base64.ps1
+  (укажите пути к .p12 и .mobileprovision)
+
+Подробно: ИНСТРУКЦИЯ.txt
+
+═══════════════════════════════════════════════════════════════

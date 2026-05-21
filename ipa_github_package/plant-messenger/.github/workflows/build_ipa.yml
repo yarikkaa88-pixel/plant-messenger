@@ -1,0 +1,99 @@
+# Сборка IPA для приложения PLANT на GitHub Actions (нужен Mac-runner).
+#
+# Перед первым запуском добавьте Secrets в репозитории:
+# Settings → Secrets and variables → Actions → New repository secret
+#
+#   BUILD_CERTIFICATE_BASE64      — сертификат .p12 в Base64
+#   P12_PASSWORD                  — пароль от .p12
+#   BUILD_PROVISION_PROFILE_BASE64 — профиль .mobileprovision в Base64
+#   KEYCHAIN_PASSWORD             — любой пароль для временной связки ключей
+#
+# Опционально:
+#   APPLE_TEAM_ID                 — Team ID из developer.apple.com
+#
+# IPA появится в Actions → артефакт "plant-ipa" (скачать .zip).
+
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  FLUTTER_VERSION: "3.29.3"
+  BUNDLE_ID: com.plant.messenger
+
+jobs:
+  build-ipa:
+    name: Build PLANT IPA
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Install Apple certificate and provisioning profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${BUILD_CERTIFICATE_BASE64:-}" ] || [ -z "${BUILD_PROVISION_PROFILE_BASE64:-}" ]; then
+            echo "::error::Добавьте Secrets: BUILD_CERTIFICATE_BASE64 и BUILD_PROVISION_PROFILE_BASE64"
+            exit 1
+          fi
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/build_profile.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles"
+
+      - name: Patch ExportOptions team ID
+        if: ${{ secrets.APPLE_TEAM_ID }}
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :teamID $APPLE_TEAM_ID" ios/ExportOptions.plist
+
+      - name: Build IPA
+        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plant-ipa
+          path: build/ios/ipa/*.ipa
+          if-no-files-found: error
+          retention-days: 14

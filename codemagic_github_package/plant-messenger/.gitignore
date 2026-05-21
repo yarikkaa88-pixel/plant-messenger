@@ -1,0 +1,13 @@
+/build/
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+.idea/
+*.iml
+*.p12
+*.mobileprovision
+secrets_output/
+.DS_Store
+Thumbs.db
+**/local.properties

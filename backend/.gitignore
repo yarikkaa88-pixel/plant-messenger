@@ -1,0 +1,6 @@
+node_modules/
+plant.db
+plant.db-wal
+plant.db-shm
+uploads/
+.env

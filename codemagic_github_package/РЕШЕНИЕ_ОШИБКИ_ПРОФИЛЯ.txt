@@ -1,0 +1,86 @@
+═══════════════════════════════════════════════════════════════
+  Ошибка: профиль не найден для com.plant.messenger
+═══════════════════════════════════════════════════════════════
+
+Текст ошибки:
+  "Не найдено подходящих профилей для идентификатора пакета
+   com.plant.messenger и типа распространения development"
+
+Это значит: Apple не видит Development-профиль для вашего приложения.
+
+
+═══════════════════════════════════════════════════════════════
+  РЕШЕНИЕ — 3 ШАГА
+═══════════════════════════════════════════════════════════════
+
+ШАГ 1. APPLE DEVELOPER (обязательно)
+────────────────────────────────────
+  Откройте: https://developer.apple.com/account
+
+  A) Создайте App ID (если нет):
+     Certificates, Identifiers & Profiles → Identifiers → +
+     → App IDs → App → Continue
+     → Bundle ID: Explicit → com.plant.messenger
+     → Register
+
+  B) Создайте профиль Development:
+     Profiles → + → iOS App Development → Continue
+     → выберите App ID: com.plant.messenger
+     → выберите сертификат Development
+     → выберите iPhone (устройства для теста)
+     → имя профиля, например: PLANT Development
+     → Download (.mobileprovision)
+
+
+ШАГ 2. CODEMAGIC — подключить Apple
+───────────────────────────────────
+  https://codemagic.io → Teams → ваш аккаунт
+
+  Integrations → Developer Portal (или App Store Connect):
+    • Подключите Apple ID с доступом к Developer Program
+    ИЛИ
+    • App Store Connect API Key (.p8) + Issuer ID + Key ID
+
+  Code signing identities:
+    • Убедитесь, что есть сертификат iOS Development
+    • Codemagic может создать его сам через fetch-signing-files
+
+
+ШАГ 3. ЗАПУСТИТЬ СБОРКУ СНОВА
+──────────────────────────────
+  • Обновите codemagic.yaml в репозитории (уже с авто-подписью)
+  • git add . && git commit -m "fix signing" && git push
+  • Codemagic → Start new build
+
+
+═══════════════════════════════════════════════════════════════
+  ЧАСТЫЕ ПРИЧИНЫ
+═══════════════════════════════════════════════════════════════
+
+  ✗ Нет платного Apple Developer ($99/год)
+      → бесплатный Apple ID: только через Xcode на Mac,
+        Codemagic часто не может создать профили
+
+  ✗ App ID com.plant.messenger не создан
+      → создайте в Identifiers (шаг 1A)
+
+  ✗ Профиль Development не создан
+      → создайте в Profiles (шаг 1B)
+
+  ✗ Apple не подключён в Codemagic
+      → Integrations → Developer Portal
+
+  ✗ В ExportOptions.plist стояло YOUR_TEAM_ID
+      → в новой версии используется automatic signing
+
+
+═══════════════════════════════════════════════════════════════
+  ПРОВЕРКА
+═══════════════════════════════════════════════════════════════
+
+  На developer.apple.com → Profiles:
+    должен быть профиль типа "iOS App Development"
+    с App ID = com.plant.messenger
+    статус = Active
+
+═══════════════════════════════════════════════════════════════

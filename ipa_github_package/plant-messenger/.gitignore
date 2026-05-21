@@ -1,0 +1,23 @@
+# Сборка и кэш
+/build/
+.dart_tool/
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# IDE
+.idea/
+*.iml
+
+# Секреты Apple (никогда не коммитить!)
+*.p12
+*.mobileprovision
+secrets_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android (если добавите позже)
+**/local.properties

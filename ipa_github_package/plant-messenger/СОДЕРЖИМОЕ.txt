@@ -1,0 +1,14 @@
+Содержимое папки plant-messenger (залить на GitHub целиком):
+
+  .github/workflows/build_ipa.yml  — сборка IPA
+  ios/ExportOptions.plist          — настройки экспорта
+  ios/                             — проект Xcode + иконки
+  lib/                             — код PLANT
+  assets/icon/app_icon.png         — логотип
+  test/                            — тесты
+  pubspec.yaml
+  pubspec.lock
+  analysis_options.yaml
+  .gitignore
+
+Bundle ID: com.plant.messenger

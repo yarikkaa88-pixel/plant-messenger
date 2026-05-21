@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String              @id @default(uuid())
+  nickname     String              @unique
+  passwordHash String              @map("password_hash")
+  phone        String              @unique
+  avatarColor  Int                 @default(4280399410) @map("avatar_color")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  chatMembers  ChatParticipant[]
+  sentMessages Message[]
+  ownedChannels Channel[]          @relation("channel_owner")
+  subscriptions ChannelSubscriber[]
+  reactions    PostReaction[]
+  comments     PostComment[]
+
+  @@map("users")
+}
+
+model Chat {
+  id           String            @id @default(uuid())
+  createdAt    DateTime          @default(now()) @map("created_at")
+  participants ChatParticipant[]
+  messages     Message[]
+
+  @@map("chats")
+}
+
+model ChatParticipant {
+  chatId  String @map("chat_id")
+  userId  String @map("user_id")
+  chat    Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+  @@map("chat_participants")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id")
+  senderId  String   @map("sender_id")
+  type      String
+  content   String
+  fileName  String?  @map("file_name")
+  sentAt    DateTime @default(now()) @map("sent_at")
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Channel {
+  id          String              @id @default(uuid())
+  name        String
+  description String              @default("")
+  ownerId     String              @map("owner_id")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  owner       User                @relation("channel_owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  subscribers ChannelSubscriber[]
+  posts       ChannelPost[]
+
+  @@map("channels")
+}
+
+model ChannelSubscriber {
+  channelId String  @map("channel_id")
+  userId    String  @map("user_id")
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([channelId, userId])
+  @@map("channel_subscribers")
+}
+
+model ChannelPost {
+  id        String         @id @default(uuid())
+  channelId String         @map("channel_id")
+  type      String
+  content   String
+  fileName  String?        @map("file_name")
+  sentAt    DateTime       @default(now()) @map("sent_at")
+  channel   Channel        @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  reactions PostReaction[]
+  comments  PostComment[]
+
+  @@map("channel_posts")
+}
+
+model PostReaction {
+  postId  String      @map("post_id")
+  userId  String      @map("user_id")
+  emoji   String
+  post    ChannelPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId, emoji])
+  @@map("post_reactions")
+}
+
+model PostComment {
+  id      String      @id @default(uuid())
+  postId  String      @map("post_id")
+  userId  String      @map("user_id")
+  text    String
+  sentAt  DateTime    @default(now()) @map("sent_at")
+  post    ChannelPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("post_comments")
+}

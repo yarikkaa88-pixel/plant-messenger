@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: plant-api
+    env: node
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install && npm run prisma:generate
+    startCommand: npm run prisma:migrate && npm run prisma:seed && npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 3000
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: SENTRY_DSN
+        sync: false
+      - key: https://yuvddciwlzqmycnhcpdv.supabase.co
+        sync: false
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1dmRkY2l3bHpxbXljbmhjcGR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTM1NzE2MSwiZXhwIjoyMDk0OTMzMTYxfQ.Ie_shrczWVixKgf6ibHrCtt66N6Iyiu-_WlNsuP48ww
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: plant-media

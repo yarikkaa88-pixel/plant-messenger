@@ -1,0 +1,109 @@
+═══════════════════════════════════════════════════════════════
+  PLANT + Codemagic — полная инструкция
+═══════════════════════════════════════════════════════════════
+
+Codemagic — облачный сервис сборки приложений.
+Сайт: https://codemagic.io
+
+Преимущества перед GitHub Actions:
+  • Не нужен свой Mac
+  • Удобная настройка подписи iOS через интерфейс
+  • Готовые шаблоны для Flutter
+
+
+───────────────────────────────────────────────────────────────
+1. ЧТО ЗАГРУЖАТЬ НА GITHUB
+───────────────────────────────────────────────────────────────
+
+Только папку:  plant-messenger/
+
+Файл codemagic.yaml должен быть в КОРНЕ репозитория (уже там).
+
+
+───────────────────────────────────────────────────────────────
+2. РЕГИСТРАЦИЯ CODEMAGIC
+───────────────────────────────────────────────────────────────
+
+  1. https://codemagic.io → Sign up
+  2. Подключите GitHub-аккаунт
+  3. Разрешите доступ к репозиторию plant-messenger
+
+
+───────────────────────────────────────────────────────────────
+3. ПОДКЛЮЧЕНИЕ ПРОЕКТА
+───────────────────────────────────────────────────────────────
+
+  1. Add application
+  2. Выберите plant-messenger
+  3. Project type: Flutter
+  4. Codemagic обнаружит codemagic.yaml
+
+
+───────────────────────────────────────────────────────────────
+4. ПОДПИСЬ iOS (ОБЯЗАТЕЛЬНО ДЛЯ IPA)
+───────────────────────────────────────────────────────────────
+
+  Teams → [ваша команда] → codemagic.yaml settings
+  или: Application settings → Code signing
+
+  Способ 1 — Automatic (рекомендуется):
+    • Integrations → Developer Portal
+    • App Store Connect API key ИЛИ Apple ID
+    • Issuer ID, Key ID, .p8 файл — из App Store Connect
+    • Codemagic создаст профили для com.plant.messenger
+
+  Способ 2 — Manual:
+    • Загрузите Distribution/Development certificate (.p12)
+    • Загрузите Provisioning profile (.mobileprovision)
+
+  Обновите ios/ExportOptions.plist:
+    teamID: YOUR_TEAM_ID
+    PLANT_PROFILE_NAME: точное имя профиля
+
+
+───────────────────────────────────────────────────────────────
+5. WORKFLOW В codemagic.yaml
+───────────────────────────────────────────────────────────────
+
+  plant-ios-ipa     → IPA для iPhone (.ipa)
+  plant-android-apk → APK для Android (нужен keystore в Codemagic)
+
+  Для Android: Teams → Code signing → Android keystores → Add
+
+
+───────────────────────────────────────────────────────────────
+6. ЗАПУСК И СКАЧИВАНИЕ IPA
+───────────────────────────────────────────────────────────────
+
+  1. Start new build → workflow "PLANT — сборка IPA"
+  2. Дождитесь статуса finished (зелёный)
+  3. Build overview → Artifacts → plant-ios-ipa → Download .ipa
+  4. Установите на iPhone через Xcode / AltStore / TestFlight
+
+
+───────────────────────────────────────────────────────────────
+7. БЕСПЛАТНЫЙ ПЛАН
+───────────────────────────────────────────────────────────────
+
+  Codemagic даёт бесплатные минуты сборки в месяц.
+  Проверьте лимиты на: https://codemagic.io/pricing
+
+
+───────────────────────────────────────────────────────────────
+8. ОШИБКИ
+───────────────────────────────────────────────────────────────
+
+  Code signing failed
+    → проверьте Bundle ID com.plant.messenger в Apple Developer
+    → подключите Apple integration в Codemagic
+
+  No Podfile / pod install failed
+    → workflow уже запускает pod install в папке ios
+
+  ExportOptions error
+    → исправьте teamID и имя профиля в ExportOptions.plist
+
+  codemagic.yaml not found
+    → файл должен быть в корне репозитория, не в подпапке
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,70 @@
+═══════════════════════════════════════════════════════════════
+  PLANT — папка для GitHub + Codemagic (codemagic.io)
+═══════════════════════════════════════════════════════════════
+
+Залейте на GitHub папку:  plant-messenger/
+
+Внутри уже есть:
+  • codemagic.yaml     — настройки сборки для Codemagic
+  • lib/, ios/, assets/ — код приложения
+  • ios/ExportOptions.plist
+
+═══════════════════════════════════════════════════════════════
+  ШАГ 1. GITHUB
+═══════════════════════════════════════════════════════════════
+
+  cd plant-messenger
+  git init
+  git add .
+  git commit -m "PLANT for Codemagic"
+  git branch -M main
+  git remote add origin https://github.com/ВАШ_ЛОГИН/plant-messenger.git
+  git push -u origin main
+
+═══════════════════════════════════════════════════════════════
+  ШАГ 2. CODEMAGIC (https://codemagic.io)
+═══════════════════════════════════════════════════════════════
+
+  1. Зарегистрируйтесь на codemagic.io
+  2. Add application → выберите GitHub → репозиторий plant-messenger
+  3. Codemagic найдёт codemagic.yaml автоматически
+
+═══════════════════════════════════════════════════════════════
+  ШАГ 3. APPLE (для IPA на iPhone)
+═══════════════════════════════════════════════════════════════
+
+  В Codemagic: Teams → Personal Account → Code signing identities
+
+  Вариант А (проще):
+    • Integrations → Apple Developer Portal
+    • Подключите Apple ID / API Key
+    • Codemagic сам создаст сертификаты
+
+  Вариант Б (вручную):
+    • Загрузите .p12 и .mobileprovision
+
+  В ios/ExportOptions.plist замените:
+    YOUR_TEAM_ID       → ваш Team ID
+    PLANT_PROFILE_NAME → имя профиля Apple
+
+  Bundle ID: com.plant.messenger
+
+═══════════════════════════════════════════════════════════════
+  ШАГ 4. ЗАПУСК СБОРКИ
+═══════════════════════════════════════════════════════════════
+
+  1. Откройте приложение в Codemagic
+  2. Выберите workflow: "PLANT — сборка IPA (iPhone)"
+  3. Start new build
+  4. После сборки → Artifacts → скачайте .ipa
+
+═══════════════════════════════════════════════════════════════
+  ШАГ 5. EMAIL (необязательно)
+═══════════════════════════════════════════════════════════════
+
+  В codemagic.yaml замените user@example.com на ваш email
+  — придёт письмо со ссылкой на IPA
+
+═══════════════════════════════════════════════════════════════
+
+Подробнее: ИНСТРУКЦИЯ_CODEMAGIC.txt

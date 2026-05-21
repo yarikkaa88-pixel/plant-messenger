@@ -1,0 +1,101 @@
+═══════════════════════════════════════════════════════════════
+  PLANT — как залить проект на GitHub и получить IPA
+═══════════════════════════════════════════════════════════════
+
+1. ЧТО ЗАГРУЖАТЬ НА GITHUB
+──────────────────────────
+Загрузите ВЕСЬ проект (папку flutter_application_1), включая:
+
+  lib/
+  ios/              ← обязательно для IPA
+  android/
+  assets/
+  pubspec.yaml
+  pubspec.lock
+  .github/workflows/build_ipa.yml
+  ios/ExportOptions.plist
+
+НЕ загружайте (уже в .gitignore):
+  build/
+  .dart_tool/
+
+
+2. СОЗДАТЬ РЕПОЗИТОРИЙ НА GITHUB
+────────────────────────────────
+  • github.com → New repository → имя, например: plant-messenger
+  • без README (если проект уже есть локально)
+
+
+3. ЗАЛИТЬ КОД (PowerShell)
+──────────────────────────
+  cd "c:\Users\User\Desktop\Новая папка (4)\flutter_application_1"
+
+  git init
+  git add .
+  git commit -m "PLANT messenger"
+  git branch -M main
+  git remote add origin https://github.com/ВАШ_ЛОГИН/plant-messenger.git
+  git push -u origin main
+
+
+4. НАСТРОИТЬ APPLE (на Mac или developer.apple.com)
+────────────────────────────────────────────────────
+  • Bundle ID: com.plant.messenger (уже в проекте)
+  • Создайте App ID и Provisioning Profile (Development или Ad Hoc)
+  • Скачайте сертификат iOS Development → экспорт в .p12 с паролем
+  • Скачайте .mobileprovision
+
+
+5. СЕКРЕТЫ В GITHUB
+───────────────────
+  Репозиторий → Settings → Secrets and variables → Actions
+
+  Создайте секреты:
+
+  BUILD_CERTIFICATE_BASE64
+    PowerShell (на Windows):
+      [Convert]::ToBase64String([IO.File]::ReadAllBytes("certificate.p12"))
+
+  P12_PASSWORD
+    пароль от .p12
+
+  BUILD_PROVISION_PROFILE_BASE64
+    [Convert]::ToBase64String([IO.File]::ReadAllBytes("profile.mobileprovision"))
+
+  KEYCHAIN_PASSWORD
+    любой пароль, например: github-actions-keychain
+
+  APPLE_TEAM_ID (опционально)
+    Team ID из Apple Developer → Membership
+
+
+6. ОБНОВИТЬ ios/ExportOptions.plist
+────────────────────────────────────
+  • YOUR_TEAM_ID → ваш Team ID (10 символов)
+  • PLANT_PROFILE_NAME → точное имя профиля из .mobileprovision
+    (открыть профиль текстовым редактором, поле Name)
+
+
+7. ЗАПУСТИТЬ СБОРКУ IPA
+───────────────────────
+  GitHub → вкладка Actions → Build iOS IPA → Run workflow
+
+  После успеха:
+  Actions → последний запуск → Artifacts → plant-ipa → скачать .zip
+  Внутри будет файл .ipa
+
+
+8. УСТАНОВИТЬ НА IPHONE
+───────────────────────
+  • Development: Xcode → Window → Devices → установить IPA
+  • Или TestFlight (нужен платный Apple Developer Program)
+
+
+9. ЧАСТЫЕ ОШИБКИ
+────────────────
+  • "Secrets not set" → добавьте все 4 обязательных секрета
+  • Signing error → Bundle ID в профиле = com.plant.messenger
+  • Wrong profile name → имя в ExportOptions.plist = Name в профиле
+  • Сборка только на macOS → workflow уже использует macos-latest
+
+═══════════════════════════════════════════════════════════════

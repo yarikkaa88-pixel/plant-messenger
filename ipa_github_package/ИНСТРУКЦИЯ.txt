@@ -1,0 +1,61 @@
+═══════════════════════════════════════════════════════════════
+  Подробная инструкция — сборка IPA через GitHub
+═══════════════════════════════════════════════════════════════
+
+ШАГ 1. APPLE DEVELOPER
+──────────────────────
+  1. Зайдите на https://developer.apple.com
+  2. Certificates → создайте "iOS Development" (или Distribution)
+  3. Identifiers → App ID: com.plant.messenger
+  4. Profiles → Provisioning Profile (Development) для этого App ID
+  5. Скачайте .mobileprovision
+  6. Экспортируйте сертификат в .p12 (с паролем) через Keychain на Mac
+
+
+ШАГ 2. ExportOptions.plist
+──────────────────────────
+  Файл: plant-messenger/ios/ExportOptions.plist
+
+  Замените:
+    YOUR_TEAM_ID        → ваш Team ID (10 символов, например AB12CD34EF)
+    PLANT_PROFILE_NAME  → имя профиля (поле "Name" внутри .mobileprovision)
+
+
+ШАГ 3. СЕКРЕТЫ В GITHUB
+───────────────────────
+  Репозиторий → Settings → Secrets and variables → Actions
+
+  | Секрет                         | Значение                    |
+  |--------------------------------|-----------------------------|
+  | BUILD_CERTIFICATE_BASE64       | .p12 в Base64               |
+  | P12_PASSWORD                   | пароль .p12                 |
+  | BUILD_PROVISION_PROFILE_BASE64 | .mobileprovision в Base64   |
+  | KEYCHAIN_PASSWORD              | любой, напр. actions-key    |
+  | APPLE_TEAM_ID                  | Team ID (необязательно)     |
+
+  Для Base64 запустите convert_cert_to_base64.ps1
+
+
+ШАГ 4. СБОРКА
+─────────────
+  GitHub.com → ваш репозиторий → Actions
+  → "Build iOS IPA" → Run workflow
+  → дождитесь зелёной галочки
+  → Artifacts → plant-ipa → Download
+
+
+ШАГ 5. УСТАНОВКА НА IPHONE
+─────────────────────────
+  • Распакуйте .zip, возьмите файл .ipa
+  • Mac: Xcode → Window → Devices and Simulators → Install
+  • Или AltStore / TestFlight (для TestFlight нужен платный аккаунт $99/год)
+
+
+ЧТО ДЕЛАЕТ build_ipa.yml
+────────────────────────
+  • Берёт код из репозитория
+  • Запускает на Mac-сервере GitHub
+  • flutter pub get → flutter test → flutter build ipa
+  • Отдаёт .ipa файл для скачивания
+
+═══════════════════════════════════════════════════════════════
