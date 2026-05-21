@@ -23,9 +23,9 @@ services:
         value: "*"
       - key: SENTRY_DSN
         sync: false
-      - key: https://yuvddciwlzqmycnhcpdv.supabase.co
+      - key: SUPABASE_URL
         sync: false
-      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1dmRkY2l3bHpxbXljbmhjcGR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTM1NzE2MSwiZXhwIjoyMDk0OTMzMTYxfQ.Ie_shrczWVixKgf6ibHrCtt66N6Iyiu-_WlNsuP48ww
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SUPABASE_BUCKET
         value: plant-media
