@@ -8,8 +8,12 @@ COPY backend/package*.json ./
 COPY backend/prisma/ ./prisma/
 
 RUN npm install
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+RUN npx prisma generate
+ENV DATABASE_URL=""
+
 COPY backend/ .
 
 EXPOSE 3000
 
-CMD npx prisma generate && node server.js
+CMD node server.js
