@@ -527,6 +527,10 @@ async function start() {
     console.error('Migration warning:', err.message);
   }
   await initDb();
+  try {
+    await db.$executeRawUnsafe('TRUNCATE TABLE users CASCADE');
+    console.log('Cleaned old user data');
+  } catch (_) {}
   await seedDemoUsers();
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`PLANT API: ${PUBLIC_BASE_URL}`);

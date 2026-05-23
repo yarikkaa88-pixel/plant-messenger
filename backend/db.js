@@ -6,7 +6,7 @@ function initDb() {
   return db.$connect();
 }
 
-const AVATAR_COLORS = [0xff2d6b32, 0xff3d8b48, 0xff4a9b54, 0xff1b521b, 0xff2a6b32];
+const AVATAR_COLORS = [0x2d6b32, 0x3d8b48, 0x4a9b54, 0x1b521b, 0x2a6b32];
 
 function colorForNickname(nickname) {
   let hash = 0;
