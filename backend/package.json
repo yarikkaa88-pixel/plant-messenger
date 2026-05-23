@@ -4,12 +4,7 @@
   "description": "PLANT messenger API server",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate deploy",
-    "prisma:dev": "prisma migrate dev",
-    "prisma:seed": "node prisma/seed.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
