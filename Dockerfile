@@ -8,10 +8,8 @@ COPY backend/package*.json ./
 COPY backend/prisma/ ./prisma/
 
 RUN npm install
-RUN npx prisma generate
-
 COPY backend/ .
 
 EXPOSE 3000
 
-CMD node server.js
+CMD npx prisma generate && node server.js
