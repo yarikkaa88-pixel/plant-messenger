@@ -11,6 +11,7 @@ const http = require('http');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 const Sentry = require('@sentry/node');
 const { v4: uuidv4 } = require('uuid');
 const {
@@ -52,7 +53,9 @@ const io = new Server(server, {
 });
 
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      realtime: { transport: ws },
+    })
   : null;
 
 function authMiddleware(req, res, next) {
