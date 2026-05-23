@@ -514,7 +514,15 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'internal_error' });
 });
 
+const { execSync } = require('child_process');
+
 async function start() {
+  console.log('Running migrations...');
+  try {
+    execSync(`npx prisma migrate deploy`, { stdio: 'inherit' });
+  } catch (err) {
+    console.error('Migration warning:', err.message);
+  }
   await initDb();
   await seedDemoUsers();
   server.listen(PORT, '0.0.0.0', () => {
