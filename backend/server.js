@@ -24,6 +24,7 @@ const {
 } = require('./db');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 const PORT = Number(process.env.PORT || 3000);
