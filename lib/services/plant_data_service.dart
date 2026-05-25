@@ -160,6 +160,12 @@ class PlantDataService extends ChangeNotifier {
     }).toList();
   }
 
+  Future<List<PlantChannel>> searchChannels(String query) async {
+    if (query.trim().isEmpty) return [];
+    final list = await _api.getJsonList('/api/channels/search', query: {'q': query.trim()});
+    return list.map((e) => PlantChannel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
   PlantChat? getChatById(String id) {
     for (final c in _chats) {
       if (c.id == id) return c;

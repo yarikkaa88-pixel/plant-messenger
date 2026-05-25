@@ -335,6 +335,26 @@ app.post('/api/chats/:id/messages', authMiddleware, upload.single('file'), async
   res.status(201).json(json);
 });
 
+app.get('/api/channels/search', authMiddleware, async (req, res) => {
+  const q = (req.query.q || '').trim().toLowerCase();
+  if (!q) return res.json([]);
+  const channels = await db.channel.findMany({
+    where: {
+      name: { contains: q, mode: 'insensitive' },
+    },
+    orderBy: { createdAt: 'desc' },
+    include: { subscribers: true },
+  });
+  res.json(channels.map((ch) => ({
+    id: ch.id,
+    name: ch.name,
+    description: ch.description,
+    ownerId: ch.ownerId,
+    subscriberIds: ch.subscribers.map((s) => s.userId),
+    posts: [],
+  })));
+});
+
 app.get('/api/channels', authMiddleware, async (req, res) => {
   const userId = req.user.userId;
   const channels = await db.channel.findMany({
