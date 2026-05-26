@@ -12,6 +12,7 @@ import '../widgets/plant_search_field.dart';
 import 'channel_screen.dart';
 import 'chat_screen.dart';
 import 'create_channel_screen.dart';
+import 'search_channels_screen.dart';
 import 'search_people_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -501,6 +502,7 @@ class _ChannelsList extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: () {
                 Navigator.push(
@@ -516,6 +518,23 @@ class _ChannelsList extends StatelessWidget {
               ),
               icon: const Icon(Icons.add),
               label: const Text('Создать канал'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SearchChannelsScreen(),
+                  ),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: PlantColors.header,
+                side: const BorderSide(color: PlantColors.header),
+              ),
+              icon: const Icon(Icons.search),
+              label: const Text('Найти канал'),
             ),
           ],
         ),
