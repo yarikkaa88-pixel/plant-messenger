@@ -78,6 +78,16 @@ class PlantDataService extends ChangeNotifier {
     await refreshAll();
   }
 
+  Future<PlantUser> updateProfile({bool? hidePhone, File? avatarFile}) async {
+    final fields = <String, String>{};
+    if (hidePhone != null) fields['hidePhone'] = hidePhone.toString();
+    final json = await _api.postMultipart('/api/auth/profile', fields: fields, file: avatarFile, fileField: 'avatar');
+    _currentUser = PlantUser.fromJson(json);
+    await _prefs.setString(_userKey, jsonEncode(_currentUser!.toJson()));
+    notifyListeners();
+    return _currentUser!;
+  }
+
   Future<void> clearSession() async {
     _api.setToken(null);
     RealtimeService.instance.disconnect();

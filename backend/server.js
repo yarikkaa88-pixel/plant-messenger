@@ -224,6 +224,19 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   res.json(await getUserById(req.user.userId));
 });
 
+app.put('/api/auth/profile', authMiddleware, upload.single('avatar'), async (req, res) => {
+  const userId = req.user.userId;
+  const { hidePhone } = req.body;
+  const data = {};
+  if (hidePhone !== undefined) data.hidePhone = hidePhone === 'true';
+  if (req.file) {
+    const saved = await saveMedia(req.file);
+    data.avatarPath = saved.content;
+  }
+  await db.user.update({ where: { id: userId }, data });
+  res.json(await getUserById(userId));
+});
+
 app.get('/api/users/search', authMiddleware, async (req, res) => {
   const q = (req.query.q || '').trim().toLowerCase();
   if (!q) return res.json([]);

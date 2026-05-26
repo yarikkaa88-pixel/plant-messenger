@@ -1,34 +1,20 @@
-import 'dart:io';
-
 class ApiConfig {
   ApiConfig._();
 
-  /// Переопределите через --dart-define=API_URL=http://192.168.1.5:3000
+  /// URL из --dart-define=API_URL=... (если передан)
   static const String _envUrl = String.fromEnvironment('API_URL');
-  static const String _lanIp = String.fromEnvironment('API_LAN_IP');
-  static const String _envWsUrl = String.fromEnvironment('WS_URL');
 
-  static String get baseUrl {
-    return candidates.first;
-  }
+  /// Жёстко заданный URL сервера (если не передан через --dart-define)
+  static const String _hardcodedUrl = 'https://plant-api-production-76fa.up.railway.app';
 
-  static String get wsUrl {
-    if (_envWsUrl.isNotEmpty) return _envWsUrl;
-    if (_envUrl.isNotEmpty) return _envUrl;
-    return baseUrl;
-  }
+  /// Финальный URL (envUrl имеет приоритет)
+  static String get _url => _envUrl.isNotEmpty ? _envUrl : _hardcodedUrl;
 
-  static List<String> get candidates {
-    if (_envUrl.isNotEmpty) return [_envUrl];
+  /// HTTP/HTTPS URL для REST API
+  static String get baseUrl => _url;
 
-    final urls = <String>[
-      if (Platform.isAndroid) 'http://10.0.2.2:3000',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      if (_lanIp.isNotEmpty) 'http://$_lanIp:3000',
-    ];
-
-    return urls.toSet().toList();
-  }
-
+  /// WebSocket URL
+  static String get wsUrl => _url
+      .replaceFirst('https://', 'wss://')
+      .replaceFirst('http://', 'ws://');
 }

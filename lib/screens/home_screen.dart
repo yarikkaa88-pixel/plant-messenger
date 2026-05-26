@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/plant_channel.dart';
 import '../models/plant_chat.dart';
@@ -14,6 +17,7 @@ import 'chat_screen.dart';
 import 'create_channel_screen.dart';
 import 'search_channels_screen.dart';
 import 'search_people_screen.dart';
+import 'welcome_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -321,46 +325,159 @@ class _CallsList extends StatelessWidget {
   }
 }
 
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends StatefulWidget {
   const _ProfileTab({required this.user});
 
   final PlantUser? user;
 
   @override
+  State<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<_ProfileTab> {
+  late bool _hidePhone;
+
+  @override
+  void initState() {
+    super.initState();
+    _hidePhone = widget.user?.hidePhone ?? false;
+  }
+
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
+    await PlantDataService.instance.updateProfile(
+      avatarFile: File(file.path),
+    );
+    setState(() {});
+  }
+
+  Future<void> _toggleHidePhone() async {
+    await PlantDataService.instance.updateProfile(
+      hidePhone: !_hidePhone,
+    );
+    setState(() => _hidePhone = !_hidePhone);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
+    final user = widget.user ?? PlantDataService.instance.currentUser;
+    final data = PlantDataService.instance;
+
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: PlantColors.listTile,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: PlantColors.header.withValues(alpha: 0.35)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const DefaultAvatar(radius: 42),
-            const SizedBox(height: 14),
-            Text(
-              user?.nickname ?? 'Пользователь',
-              style: GoogleFonts.nunito(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: PlantColors.darkGreen,
-              ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: PlantColors.listTile,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: PlantColors.header.withValues(alpha: 0.35)),
             ),
-            const SizedBox(height: 6),
-            Text(
-              user?.phone ?? '',
-              style: GoogleFonts.nunito(
-                fontSize: 16,
-                color: PlantColors.forest,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: _pickAvatar,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 42,
+                        backgroundImage: user?.avatarPath != null
+                            ? NetworkImage(user!.avatarPath!)
+                            : const AssetImage('default_avatar.png') as ImageProvider,
+                        backgroundColor: Colors.transparent,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: PlantColors.header,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  user?.nickname ?? 'Пользователь',
+                  style: GoogleFonts.nunito(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: PlantColors.darkGreen,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _hidePhone ? user!.displayPhone : (user?.phone ?? ''),
+                  style: GoogleFonts.nunito(
+                    fontSize: 16,
+                    color: PlantColors.forest,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: PlantColors.listTile,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: Text(
+                    'Скрыть номер телефона',
+                    style: GoogleFonts.nunito(
+                      fontWeight: FontWeight.w700,
+                      color: PlantColors.darkGreen,
+                    ),
+                  ),
+                  subtitle: Text(
+                    _hidePhone ? 'Номер скрыт' : 'Номер виден всем',
+                    style: GoogleFonts.nunito(color: PlantColors.forest),
+                  ),
+                  value: _hidePhone,
+                  activeColor: PlantColors.header,
+                  onChanged: (_) => _toggleHidePhone(),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.redAccent),
+                  title: Text(
+                    'Выйти',
+                    style: GoogleFonts.nunito(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  onTap: () async {
+                    await data.clearSession();
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const WelcomeScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

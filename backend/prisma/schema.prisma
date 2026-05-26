@@ -13,6 +13,8 @@ model User {
   passwordHash String              @map("password_hash")
   phone        String              @unique
   avatarColor  Int                 @default(4280399410) @map("avatar_color")
+  avatarPath   String?             @map("avatar_path")
+  hidePhone    Boolean             @default(false) @map("hide_phone")
   createdAt    DateTime            @default(now()) @map("created_at")
   chatMembers  ChatParticipant[]
   sentMessages Message[]

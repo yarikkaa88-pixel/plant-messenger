@@ -24,6 +24,8 @@ function userToJson(row) {
     phone: row.phone,
     avatarColor: row.avatarColor,
     online: false,
+    avatarPath: row.avatarPath || null,
+    hidePhone: row.hidePhone || false,
   };
 }
 

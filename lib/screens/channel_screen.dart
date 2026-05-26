@@ -3,12 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/plant_channel.dart';
 import '../models/plant_message.dart';
 import '../services/plant_data_service.dart';
 import '../theme/plant_colors.dart';
-import '../widgets/message_bubble.dart';
+import '../widgets/message_bubble.dart' hide _MessageContent, _PhotoContent, _FileContent;
 import '../widgets/plant_search_field.dart';
 
 class ChannelScreen extends StatefulWidget {
@@ -430,10 +431,7 @@ class _PostContent extends StatelessWidget {
         ),
       MessageType.photo => _ChannelPhoto(path: post.content),
       MessageType.videoCircle => VideoCircleBubble(path: post.content),
-      MessageType.file => Text(
-          '📎 ${post.fileName ?? 'Файл'}',
-          style: GoogleFonts.nunito(color: PlantColors.darkGreen),
-        ),
+      MessageType.file => _ChannelFile(fileName: post.fileName ?? 'Файл', fileUrl: post.content),
     };
   }
 }
@@ -446,21 +444,89 @@ class _ChannelPhoto extends StatelessWidget {
   bool get _isNetwork =>
       path.startsWith('http://') || path.startsWith('https://');
 
+  void _openImage(BuildContext context) {
+    if (_isNetwork) {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.black,
+          child: InteractiveViewer(
+            child: Image.network(path, fit: BoxFit.contain),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isNetwork) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(path, width: double.infinity, fit: BoxFit.cover),
+      return GestureDetector(
+        onTap: () => _openImage(context),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(path, width: double.infinity, fit: BoxFit.cover),
+        ),
       );
     }
     final file = File(path);
     if (!file.existsSync()) {
       return const Text('📷 Фото');
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.file(file, width: double.infinity, fit: BoxFit.cover),
+    return GestureDetector(
+      onTap: () => _openImage(context),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.file(file, width: double.infinity, fit: BoxFit.cover),
+      ),
+    );
+  }
+}
+
+class _ChannelFile extends StatelessWidget {
+  const _ChannelFile({required this.fileName, required this.fileUrl});
+
+  final String fileName;
+  final String fileUrl;
+
+  Future<void> _openFile() async {
+    final uri = Uri.parse(fileUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _openFile,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: PlantColors.listTile,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.insert_drive_file_rounded, color: PlantColors.forest),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                fileName,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: PlantColors.darkGreen,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.open_in_new, size: 16, color: PlantColors.forest),
+          ],
+        ),
+      ),
     );
   }
 }
