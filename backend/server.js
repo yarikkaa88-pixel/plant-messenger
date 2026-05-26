@@ -562,6 +562,11 @@ async function start() {
   }
   await initDb();
   try {
+    await db.$executeRawUnsafe('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "avatar_path" TEXT');
+    await db.$executeRawUnsafe('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "hide_phone" BOOLEAN NOT NULL DEFAULT false');
+    console.log('Schema updated');
+  } catch (_) {}
+  try {
     await db.$executeRawUnsafe('TRUNCATE TABLE users CASCADE');
     console.log('Cleaned old user data');
   } catch (_) {}
