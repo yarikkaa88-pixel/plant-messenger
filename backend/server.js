@@ -94,20 +94,10 @@ async function seedDemoUsers() {
 }
 
 async function saveMedia(file) {
-  const ext = path.extname(file.originalname || '');
-  const filename = `${uuidv4()}${ext}`;
-  if (supabase) {
-    const { error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filename, file.buffer, {
-      contentType: file.mimetype,
-      upsert: false,
-    });
-    if (error) throw error;
-    const { data } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename);
-    return { content: data.publicUrl, fileName: file.originalname };
-  }
-  const target = path.join(uploadsDir, filename);
-  await fs.promises.writeFile(target, file.buffer);
-  return { content: `${PUBLIC_BASE_URL}/uploads/${filename}`, fileName: file.originalname };
+  // Сохраняем как base64 data URL — работает везде, не зависит от статики
+  const base64 = file.buffer.toString('base64');
+  const mime = file.mimetype || 'application/octet-stream';
+  return { content: `data:${mime};base64,${base64}`, fileName: file.originalname };
 }
 
 function messageToJson(row, currentUserId) {
