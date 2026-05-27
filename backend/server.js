@@ -344,6 +344,32 @@ app.post('/api/chats/:id/messages', authMiddleware, upload.single('file'), async
   res.status(201).json(json);
 });
 
+app.put('/api/chats/:chatId/messages/:messageId', authMiddleware, async (req, res) => {
+  const { chatId, messageId } = req.params;
+  const userId = req.user.userId;
+  const row = await db.message.findUnique({ where: { id: messageId, chatId } });
+  if (!row) return res.status(404).json({ error: 'not_found' });
+  if (row.senderId !== userId) return res.status(403).json({ error: 'forbidden' });
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: 'empty_content' });
+  const updated = await db.message.update({ where: { id: messageId }, data: { content: content.trim() } });
+  const json = messageToJson(updated, userId);
+  io.to(`chat:${chatId}`).emit('message:updated', json);
+  res.json(json);
+});
+
+app.delete('/api/chats/:chatId/messages/:messageId', authMiddleware, async (req, res) => {
+  const { chatId, messageId } = req.params;
+  const userId = req.user.userId;
+  const row = await db.message.findUnique({ where: { id: messageId, chatId } });
+  if (!row) return res.status(404).json({ error: 'not_found' });
+  if (row.senderId !== userId) return res.status(403).json({ error: 'forbidden' });
+  await db.message.delete({ where: { id: messageId } });
+  io.to(`chat:${chatId}`).emit('message:deleted', { id: messageId, chatId, senderId: userId });
+  res.json({ ok: true });
+});
+
+
 app.get('/api/channels/search', authMiddleware, async (req, res) => {
   const q = (req.query.q || '').trim().toLowerCase();
   if (!q) return res.json([]);

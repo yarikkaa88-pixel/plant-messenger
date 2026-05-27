@@ -325,6 +325,41 @@ class PlantDataService extends ChangeNotifier {
     await refreshChannel(channelId);
   }
 
+  Future<void> deleteMessage(String chatId, String messageId) async {
+    await _api.delete('/api/chats/$chatId/messages/$messageId');
+    final index = _chats.indexWhere((c) => c.id == chatId);
+    if (index >= 0) {
+      final chat = _chats[index];
+      _chats[index] = chat.copyWith(
+        messages: chat.messages.where((m) => m.id != messageId).toList(),
+      );
+      notifyListeners();
+    }
+  }
+
+  Future<void> editMessage(String chatId, String messageId, String newContent) async {
+    final json = await _api.putJson('/api/chats/$chatId/messages/$messageId', {'content': newContent});
+    final updated = PlantMessage.fromJson(json);
+    final index = _chats.indexWhere((c) => c.id == chatId);
+    if (index >= 0) {
+      final chat = _chats[index];
+      _chats[index] = chat.copyWith(
+        messages: chat.messages.map((m) => m.id == messageId ? updated : m).toList(),
+      );
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteChannelPost(String channelId, String postId) async {
+    await _api.delete('/api/channels/$channelId/posts/$postId');
+    await refreshChannel(channelId);
+  }
+
+  Future<void> editChannelPost(String channelId, String postId, String newContent) async {
+    await _api.putJson('/api/channels/$channelId/posts/$postId', {'content': newContent});
+    await refreshChannel(channelId);
+  }
+
   static String formatTime(DateTime dt) {
     final now = DateTime.now();
     if (now.difference(dt).inDays == 0) {

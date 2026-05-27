@@ -115,6 +115,38 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
   }
 
+  Future<void> _deleteMessage(String messageId) async {
+    await _data.deleteMessage(widget.chatId, messageId);
+  }
+
+  Future<void> _editMessage(String messageId, String oldText) async {
+    final controller = TextEditingController(text: oldText);
+    final newText = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Изменить сообщение'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'Введите новый текст...',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Сохранить'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (newText != null && newText.isNotEmpty) {
+      await _data.editMessage(widget.chatId, messageId, newText);
+    }
+  }
+
   Future<void> _sendFile() async {
     final result = await FilePicker.platform.pickFiles();
     if (result == null || result.files.isEmpty) return;
@@ -206,9 +238,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemCount: chat.messages.length,
                     itemBuilder: (context, index) {
                       final msg = chat.messages[index];
+                      final isMine = msg.isMine(_data.currentUserId!);
                       return MessageBubble(
                         message: msg,
-                        isMine: msg.isMine(_data.currentUserId!),
+                        isMine: isMine,
+                        onDelete: isMine ? () => _deleteMessage(msg.id) : null,
+                        onEdit: (isMine && msg.type == MessageType.text)
+                            ? (text) => _editMessage(msg.id, text)
+                            : null,
                       );
                     },
                   ),

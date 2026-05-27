@@ -13,55 +13,93 @@ class MessageBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.isMine,
+    this.onDelete,
+    this.onEdit,
   });
 
   final PlantMessage message;
   final bool isMine;
+  final VoidCallback? onDelete;
+  final ValueChanged<String>? onEdit;
+
+  void _showMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (message.type == MessageType.text && onEdit != null)
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Изменить'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onEdit!.call(message.content);
+                },
+              ),
+            if (onDelete != null)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.redAccent),
+                title: const Text('Удалить', style: TextStyle(color: Colors.redAccent)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onDelete!.call();
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
-        ),
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-        decoration: BoxDecoration(
-          color: isMine ? PlantColors.bubbleSent : PlantColors.bubbleReceived,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(isMine ? 18 : 4),
-            bottomRight: Radius.circular(isMine ? 4 : 18),
+    return GestureDetector(
+      onLongPress: isMine ? () => _showMenu(context) : null,
+      child: Align(
+        alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * 0.78,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: PlantColors.darkGreen.withValues(alpha: 0.08),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+          decoration: BoxDecoration(
+            color: isMine ? PlantColors.bubbleSent : PlantColors.bubbleReceived,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(18),
+              topRight: const Radius.circular(18),
+              bottomLeft: Radius.circular(isMine ? 18 : 4),
+              bottomRight: Radius.circular(isMine ? 4 : 18),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _MessageContent(message: message, isMine: isMine),
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                _formatTime(message.sentAt),
-                style: GoogleFonts.nunito(
-                  fontSize: 11,
-                  color: isMine
-                      ? Colors.white.withValues(alpha: 0.75)
-                      : PlantColors.forest.withValues(alpha: 0.7),
+            boxShadow: [
+              BoxShadow(
+                color: PlantColors.darkGreen.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _MessageContent(message: message, isMine: isMine),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  _formatTime(message.sentAt),
+                  style: GoogleFonts.nunito(
+                    fontSize: 11,
+                    color: isMine
+                        ? Colors.white.withValues(alpha: 0.75)
+                        : PlantColors.forest.withValues(alpha: 0.7),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -167,7 +205,6 @@ class VideoCircleBubble extends StatelessWidget {
 
   Future<void> _openVideo() async {
     if (path.startsWith('data:')) {
-      // Сохраняем base64 во временный файл и открываем
       final bytes = base64Decode(path.split(',').last);
       final tempDir = Directory.systemTemp;
       final ext = path.split(';').first.split('/').last;

@@ -61,6 +61,35 @@ class ApiClient {
     return _parseList(response);
   }
 
+  Future<Map<String, dynamic>> putJson(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final resolvedBaseUrl = await _resolveBaseUrl();
+    final response = await _client.put(
+      Uri.parse('$resolvedBaseUrl$path'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
+    return _parseObject(response);
+  }
+
+  Future<Map<String, dynamic>> delete(
+    String path, {
+    Map<String, dynamic>? body,
+  }) async {
+    final resolvedBaseUrl = await _resolveBaseUrl();
+    final request = http.Request('DELETE', Uri.parse('$resolvedBaseUrl$path'));
+    if (_token != null) {
+      request.headers['Authorization'] = 'Bearer $_token';
+    }
+    request.headers['Content-Type'] = 'application/json';
+    if (body != null) request.body = jsonEncode(body);
+    final streamed = await _client.send(request);
+    final response = await http.Response.fromStream(streamed);
+    return _parseObject(response);
+  }
+
   Future<Map<String, dynamic>> postMultipart(
     String path, {
     required Map<String, String> fields,
