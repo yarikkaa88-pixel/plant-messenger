@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -370,6 +371,20 @@ class _ProfileTabState extends State<_ProfileTab> {
     setState(() {});
   }
 
+  ImageProvider _avatarProvider(PlantUser? user) {
+    if (user == null || user.avatarPath == null) {
+      return const AssetImage('default_avatar.png');
+    }
+    if (user.avatarPath!.startsWith('data:')) {
+      final base64 = user.avatarPath!.split(',').last;
+      return MemoryImage(base64Decode(base64));
+    }
+    if (user.avatarPath!.startsWith('http')) {
+      return NetworkImage(user.avatarPath!);
+    }
+    return const AssetImage('default_avatar.png');
+  }
+
   Future<void> _toggleHidePhone() async {
     await PlantDataService.instance.updateProfile(
       hidePhone: !_hidePhone,
@@ -403,9 +418,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                     children: [
                       CircleAvatar(
                         radius: 42,
-                        backgroundImage: user?.avatarPath != null
-                            ? NetworkImage(user!.avatarPath!)
-                            : const AssetImage('default_avatar.png') as ImageProvider,
+                        backgroundImage: _avatarProvider(user),
                         backgroundColor: Colors.transparent,
                       ),
                       Positioned(
