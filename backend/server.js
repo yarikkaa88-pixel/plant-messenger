@@ -149,7 +149,7 @@ const messageLimiter = rateLimit({
 });
 
 app.use(cors({ origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN.split(','), credentials: true }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use('/api/auth', authLimiter);
 app.use('/api/chats/:id/messages', messageLimiter);
 app.use('/api/channels/:id/posts', messageLimiter);

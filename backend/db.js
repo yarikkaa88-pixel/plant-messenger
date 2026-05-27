@@ -18,14 +18,19 @@ function colorForNickname(nickname) {
 
 function userToJson(row) {
   if (!row) return null;
+  const hidePhone = row.hidePhone || false;
+  let phone = row.phone;
+  if (hidePhone && phone.length >= 7) {
+    phone = phone.slice(0, 4) + '***' + phone.slice(7);
+  }
   return {
     id: row.id,
     nickname: row.nickname,
-    phone: row.phone,
+    phone: phone,
     avatarColor: row.avatarColor,
     online: false,
     avatarPath: row.avatarPath || null,
-    hidePhone: row.hidePhone || false,
+    hidePhone,
   };
 }
 
