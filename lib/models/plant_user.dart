@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+
 class PlantUser {
   const PlantUser({
     required this.id,
@@ -53,4 +57,16 @@ class PlantUser {
         avatarPath: avatarPath ?? this.avatarPath,
         hidePhone: hidePhone ?? this.hidePhone,
       );
+
+  ImageProvider avatarProvider() {
+    if (avatarPath == null) return const AssetImage('default_avatar.png');
+    if (avatarPath!.startsWith('data:')) {
+      final base64 = avatarPath!.split(',').last;
+      return MemoryImage(base64Decode(base64));
+    }
+    if (avatarPath!.startsWith('http')) {
+      return NetworkImage(avatarPath!);
+    }
+    return const AssetImage('default_avatar.png');
+  }
 }

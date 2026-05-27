@@ -263,7 +263,7 @@ class _ContactsList extends StatelessWidget {
           },
           leading: CircleAvatar(
             radius: 25,
-            backgroundImage: const AssetImage('default_avatar.png'),
+            backgroundImage: user.avatarProvider(),
             backgroundColor: Colors.transparent,
           ),
           title: Text(
@@ -312,7 +312,7 @@ class _CallsList extends StatelessWidget {
         return ListTile(
           leading: CircleAvatar(
             radius: 25,
-            backgroundImage: const AssetImage('default_avatar.png'),
+            backgroundImage: user.avatarProvider(),
             backgroundColor: Colors.transparent,
           ),
           title: Text(
@@ -371,20 +371,6 @@ class _ProfileTabState extends State<_ProfileTab> {
     setState(() {});
   }
 
-  ImageProvider _avatarProvider(PlantUser? user) {
-    if (user == null || user.avatarPath == null) {
-      return const AssetImage('default_avatar.png');
-    }
-    if (user.avatarPath!.startsWith('data:')) {
-      final base64 = user.avatarPath!.split(',').last;
-      return MemoryImage(base64Decode(base64));
-    }
-    if (user.avatarPath!.startsWith('http')) {
-      return NetworkImage(user.avatarPath!);
-    }
-    return const AssetImage('default_avatar.png');
-  }
-
   Future<void> _toggleHidePhone() async {
     await PlantDataService.instance.updateProfile(
       hidePhone: !_hidePhone,
@@ -418,7 +404,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                     children: [
                       CircleAvatar(
                         radius: 42,
-                        backgroundImage: _avatarProvider(user),
+                        backgroundImage: user?.avatarProvider() ?? const AssetImage('default_avatar.png'),
                         backgroundColor: Colors.transparent,
                       ),
                       Positioned(
@@ -591,7 +577,7 @@ class _ChatsList extends StatelessWidget {
           },
           leading: CircleAvatar(
             radius: 28,
-            backgroundImage: const AssetImage('default_avatar.png'),
+            backgroundImage: user.avatarProvider(),
             backgroundColor: Colors.transparent,
           ),
           title: Text(
