@@ -38,7 +38,11 @@ class PlantDataService extends ChangeNotifier {
     final token = prefs.getString(_tokenKey);
     if (token != null) {
       api.setToken(token);
-      RealtimeService.instance.connect(token);
+      try {
+        RealtimeService.instance.connect(token);
+      } catch (_) {
+        // Игнорируем ошибку подключения при старте
+      }
       final userJson = prefs.getString(_userKey);
       if (userJson != null) {
         try {

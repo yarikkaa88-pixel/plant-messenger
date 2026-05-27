@@ -166,9 +166,22 @@ class VideoCircleBubble extends StatelessWidget {
   final String path;
 
   Future<void> _openVideo() async {
-    final uri = Uri.parse(path);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (path.startsWith('data:')) {
+      // Сохраняем base64 во временный файл и открываем
+      final bytes = base64Decode(path.split(',').last);
+      final tempDir = Directory.systemTemp;
+      final ext = path.split(';').first.split('/').last;
+      final tempFile = File('${tempDir.path}/video_${DateTime.now().millisecondsSinceEpoch}.$ext');
+      await tempFile.writeAsBytes(bytes);
+      final uri = Uri.file(tempFile.path);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } else {
+      final uri = Uri.parse(path);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
     }
   }
 
