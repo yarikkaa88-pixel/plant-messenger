@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -108,34 +109,39 @@ class _PhotoContent extends StatelessWidget {
 
   bool get _isNetwork =>
       path.startsWith('http://') || path.startsWith('https://');
+  bool get _isDataUrl => path.startsWith('data:');
 
   void _openImage(BuildContext context) {
-    if (_isNetwork) {
-      showDialog(
-        context: context,
-        builder: (_) => Dialog(
-          backgroundColor: Colors.black,
-          child: InteractiveViewer(
-            child: Image.network(path, fit: BoxFit.contain),
-          ),
+    final provider = _makeProvider();
+    if (provider == null) return;
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.black,
+        child: InteractiveViewer(
+          child: Image(image: provider, fit: BoxFit.contain),
         ),
-      );
+      ),
+    );
+  }
+
+  ImageProvider? _makeProvider() {
+    if (_isDataUrl) {
+      final comma = path.indexOf(',');
+      if (comma == -1) return null;
+      final bytes = base64Decode(path.substring(comma + 1));
+      return MemoryImage(bytes);
     }
+    if (_isNetwork) return NetworkImage(path);
+    final file = File(path);
+    if (file.existsSync()) return FileImage(file);
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isNetwork) {
-      return GestureDetector(
-        onTap: () => _openImage(context),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(path, width: 220, fit: BoxFit.cover),
-        ),
-      );
-    }
-    final file = File(path);
-    if (!file.existsSync()) {
+    final provider = _makeProvider();
+    if (provider == null) {
       return const Row(
         children: [
           Icon(Icons.image, color: Colors.white70),
@@ -148,7 +154,7 @@ class _PhotoContent extends StatelessWidget {
       onTap: () => _openImage(context),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.file(file, width: 220, fit: BoxFit.cover),
+        child: Image(image: provider, width: 220, fit: BoxFit.cover),
       ),
     );
   }
