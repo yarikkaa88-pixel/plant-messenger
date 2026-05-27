@@ -107,6 +107,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute<void>(
+                            builder: (_) => const SearchChannelsScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.search),
+                      color: PlantColors.header,
+                      tooltip: 'Найти канал',
+                    ),
+                  if (_tab == 2 && _chatSubTab == 1)
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
                             builder: (_) => const CreateChannelScreen(),
                           ),
                         );
