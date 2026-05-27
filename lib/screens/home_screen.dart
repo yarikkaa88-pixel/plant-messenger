@@ -359,11 +359,14 @@ class _ProfileTabState extends State<_ProfileTab> {
 
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery);
-    if (file == null) return;
-    await PlantDataService.instance.updateProfile(
-      avatarFile: File(file.path),
-    );
+    final xfile = await picker.pickImage(source: ImageSource.gallery);
+    if (xfile == null) return;
+    final bytes = await xfile.readAsBytes();
+    final tempDir = Directory.systemTemp;
+    final tempFile = File('${tempDir.path}/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg');
+    await tempFile.writeAsBytes(bytes);
+    await PlantDataService.instance.updateProfile(avatarFile: tempFile);
+    await tempFile.delete();
     setState(() {});
   }
 

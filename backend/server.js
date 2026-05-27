@@ -220,11 +220,17 @@ app.post('/api/auth/profile', authMiddleware, upload.single('avatar'), async (re
   const data = {};
   if (hidePhone !== undefined) data.hidePhone = hidePhone === 'true';
   if (req.file) {
+    console.log('Avatar file received:', req.file.originalname, req.file.size);
     const saved = await saveMedia(req.file);
     data.avatarPath = saved.content;
+    console.log('Avatar saved:', saved.content.substring(0, 60) + '...');
+  } else {
+    console.log('No avatar file, body:', Object.keys(req.body));
   }
   await db.user.update({ where: { id: userId }, data });
-  res.json(await getUserById(userId));
+  const updated = await getUserById(userId);
+  console.log('Profile updated:', updated.nickname, 'avatarPath:', updated.avatarPath ? 'yes' : 'no', 'hidePhone:', updated.hidePhone);
+  res.json(updated);
 });
 
 app.get('/api/users/search', authMiddleware, async (req, res) => {
