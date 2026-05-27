@@ -224,7 +224,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   res.json(await getUserById(req.user.userId));
 });
 
-app.put('/api/auth/profile', authMiddleware, upload.single('avatar'), async (req, res) => {
+app.post('/api/auth/profile', authMiddleware, upload.single('avatar'), async (req, res) => {
   const userId = req.user.userId;
   const { hidePhone } = req.body;
   const data = {};
