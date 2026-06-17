@@ -341,6 +341,46 @@ app.post('/api/chats/:id/messages', authMiddleware, upload.single('file'), async
   });
   const json = messageToJson(row, userId);
   io.to(`chat:${chatId}`).emit('message:new', json);
+
+  // PlantCoin bot logic
+  const chatWithBot = await db.chat.findUnique({
+    where: { id: chatId },
+    include: { participants: true },
+  });
+  if (chatWithBot) {
+    const otherParticipant = chatWithBot.participants.find((p) => p.userId !== userId);
+    if (otherParticipant) {
+      const otherUser = await db.user.findUnique({ where: { id: otherParticipant.userId } });
+      if (otherUser && otherUser.nickname === 'plantcoin_bot') {
+        const content = req.body.content || '';
+        if (content.trim() === '236345') {
+          await db.user.update({ where: { id: userId }, data: { coins: { increment: 50 } } });
+          const botReply = await db.message.create({
+            data: {
+              chatId,
+              senderId: otherParticipant.userId,
+              type: 'text',
+              content: '✅ Код верный! Вы получили 50 PlantCoin! 🪙',
+            },
+          });
+          const botJson = messageToJson(botReply, userId);
+          io.to(`chat:${chatId}`).emit('message:new', botJson);
+        } else {
+          const botReply = await db.message.create({
+            data: {
+              chatId,
+              senderId: otherParticipant.userId,
+              type: 'text',
+              content: '❌ Неверный код. Попробуйте ещё раз. Код: **236345**',
+            },
+          });
+          const botJson = messageToJson(botReply, userId);
+          io.to(`chat:${chatId}`).emit('message:new', botJson);
+        }
+      }
+    }
+  }
+
   res.status(201).json(json);
 });
 
@@ -554,6 +594,29 @@ app.post('/api/channels/:channelId/posts/:postId/comments', authMiddleware, asyn
   });
 });
 
+app.post('/api/coins/transfer', authMiddleware, async (req, res) => {
+  const { toUserId, amount } = req.body;
+  const userId = req.user.userId;
+  if (!toUserId || !amount || amount < 1) return res.status(400).json({ error: 'invalid' });
+  const sender = await db.user.findUnique({ where: { id: userId } });
+  const receiver = await db.user.findUnique({ where: { id: toUserId } });
+  if (!receiver) return res.status(404).json({ error: 'user_not_found' });
+  if ((sender.coins || 0) < amount) return res.status(400).json({ error: 'not_enough_coins' });
+  await db.user.update({ where: { id: userId }, data: { coins: { decrement: amount } } });
+  await db.user.update({ where: { id: toUserId }, data: { coins: { increment: amount } } });
+  res.json({ ok: true });
+});
+
+app.post('/api/coins/buy', authMiddleware, async (req, res) => {
+  const { amount } = req.body;
+  const userId = req.user.userId;
+  const validAmounts = [50, 100, 500, 1000];
+  if (!validAmounts.includes(amount)) return res.status(400).json({ error: 'invalid_amount' });
+  await db.user.update({ where: { id: userId }, data: { coins: { increment: amount } } });
+  const updated = await getUserById(userId);
+  res.json({ coins: updated.coins, message: `Куплено ${amount} PlantCoin` });
+});
+
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', app: 'PLANT', uptime: process.uptime() });
 });
@@ -586,11 +649,26 @@ async function start() {
   try {
     await db.$executeRawUnsafe('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "avatar_path" TEXT');
     await db.$executeRawUnsafe('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "hide_phone" BOOLEAN NOT NULL DEFAULT false');
+    await db.$executeRawUnsafe('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "coins" INTEGER NOT NULL DEFAULT 0');
     console.log('Schema updated');
   } catch (_) {}
   try {
     await db.$executeRawUnsafe('TRUNCATE TABLE users CASCADE');
     console.log('Cleaned old user data');
+  } catch (_) {}
+  // Создаём бота для PlantCoin
+  try {
+    await db.user.upsert({
+      where: { nickname: 'plantcoin_bot' },
+      create: {
+        nickname: 'plantcoin_bot',
+        phone: '+70000000001',
+        passwordHash: bcrypt.hashSync('botpass123', 10),
+        avatarColor: colorForNickname('plantcoin_bot'),
+      },
+      update: {},
+    });
+    console.log('PlantCoin bot created');
   } catch (_) {}
   await seedDemoUsers();
   server.listen(PORT, '0.0.0.0', () => {

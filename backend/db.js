@@ -31,6 +31,7 @@ function userToJson(row) {
     online: false,
     avatarPath: row.avatarPath || null,
     hidePhone,
+    coins: row.coins || 0,
   };
 }
 

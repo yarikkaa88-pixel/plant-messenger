@@ -371,6 +371,39 @@ class _ProfileTabState extends State<_ProfileTab> {
     setState(() {});
   }
 
+  Future<void> _showBuyMenu() async {
+    final amount = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Купить PlantCoin'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            ListTile(title: Text('50 PlantCoin — 50 руб'), leading: Icon(Icons.monetization_on, color: Color(0xFFFFD700))),
+            ListTile(title: Text('100 PlantCoin — 100 руб'), leading: Icon(Icons.monetization_on, color: Color(0xFFFFD700))),
+            ListTile(title: Text('500 PlantCoin — 500 руб'), leading: Icon(Icons.monetization_on, color: Color(0xFFFFD700))),
+            ListTile(title: Text('1000 PlantCoin — 1000 руб'), leading: Icon(Icons.monetization_on, color: Color(0xFFFFD700))),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, 50), child: const Text('50')),
+          TextButton(onPressed: () => Navigator.pop(ctx, 100), child: const Text('100')),
+          TextButton(onPressed: () => Navigator.pop(ctx, 500), child: const Text('500')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, 1000), child: const Text('1000')),
+        ],
+      ),
+    );
+    if (amount != null && mounted) {
+      await PlantDataService.instance.buyCoins(amount);
+      setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Куплено $amount PlantCoin'), backgroundColor: const Color(0xFFFFD700)),
+        );
+      }
+    }
+  }
+
   Future<void> _toggleHidePhone() async {
     await PlantDataService.instance.updateProfile(
       hidePhone: !_hidePhone,
@@ -439,6 +472,26 @@ class _ProfileTabState extends State<_ProfileTab> {
                     color: PlantColors.forest,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.monetization_on, color: Color(0xFFFFD700), size: 22),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${user?.coins ?? 0} PlantCoin',
+                        style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFFB8860B)),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -451,6 +504,16 @@ class _ProfileTabState extends State<_ProfileTab> {
             ),
             child: Column(
               children: [
+                ListTile(
+                  leading: const Icon(Icons.monetization_on, color: Color(0xFFFFD700)),
+                  title: Text(
+                    'Купить PlantCoin',
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: PlantColors.darkGreen),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, color: PlantColors.forest),
+                  onTap: _showBuyMenu,
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
                 SwitchListTile(
                   title: Text(
                     'Скрыть номер телефона',

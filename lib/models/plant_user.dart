@@ -11,6 +11,7 @@ class PlantUser {
     this.online = false,
     this.avatarPath,
     this.hidePhone = false,
+    this.coins = 0,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class PlantUser {
   final bool online;
   final String? avatarPath;
   final bool hidePhone;
+  final int coins;
 
   String get displayPhone => hidePhone ? phone.replaceRange(4, 7, '***') : phone;
 
@@ -31,6 +33,7 @@ class PlantUser {
         'online': online,
         'avatarPath': avatarPath,
         'hidePhone': hidePhone,
+        'coins': coins,
       };
 
   factory PlantUser.fromJson(Map<String, dynamic> json) => PlantUser(
@@ -41,12 +44,14 @@ class PlantUser {
         online: json['online'] as bool? ?? false,
         avatarPath: json['avatarPath'] as String?,
         hidePhone: json['hidePhone'] as bool? ?? false,
+        coins: json['coins'] as int? ?? 0,
       );
 
   PlantUser copyWith({
     bool? online,
     String? avatarPath,
     bool? hidePhone,
+    int? coins,
   }) =>
       PlantUser(
         id: id,
@@ -56,6 +61,7 @@ class PlantUser {
         online: online ?? this.online,
         avatarPath: avatarPath ?? this.avatarPath,
         hidePhone: hidePhone ?? this.hidePhone,
+        coins: coins ?? this.coins,
       );
 
   ImageProvider avatarProvider() {

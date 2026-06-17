@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/auth_service.dart';
 import 'services/plant_data_service.dart';
@@ -25,6 +26,8 @@ class PlantApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLoggedIn = PlantDataService.instance.currentUser != null;
+
     return MaterialApp(
       title: 'PLANT',
       debugShowCheckedModeBanner: false,
@@ -48,7 +51,7 @@ class PlantApp extends StatelessWidget {
         ),
         textTheme: GoogleFonts.nunitoTextTheme(),
       ),
-      home: const WelcomeScreen(),
+      home: isLoggedIn ? const HomeScreen() : const WelcomeScreen(),
     );
   }
 }

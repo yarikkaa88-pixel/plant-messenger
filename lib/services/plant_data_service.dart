@@ -360,6 +360,26 @@ class PlantDataService extends ChangeNotifier {
     await refreshChannel(channelId);
   }
 
+  Future<int> buyCoins(int amount) async {
+    final result = await _api.postJson('/api/coins/buy', {'amount': amount});
+    final newCoins = result['coins'] as int;
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(coins: newCoins);
+      await _prefs.setString(_userKey, jsonEncode(_currentUser!.toJson()));
+      notifyListeners();
+    }
+    return newCoins;
+  }
+
+  Future<void> transferCoins(String toUserId, int amount) async {
+    await _api.postJson('/api/coins/transfer', {'toUserId': toUserId, 'amount': amount});
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(coins: _currentUser!.coins - amount);
+      await _prefs.setString(_userKey, jsonEncode(_currentUser!.toJson()));
+      notifyListeners();
+    }
+  }
+
   static String formatTime(DateTime dt) {
     final now = DateTime.now();
     if (now.difference(dt).inDays == 0) {

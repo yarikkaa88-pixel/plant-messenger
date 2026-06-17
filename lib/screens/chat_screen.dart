@@ -235,9 +235,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    reverse: true,
                     itemCount: chat.messages.length,
                     itemBuilder: (context, index) {
-                      final msg = chat.messages[index];
+                      final msg = chat.messages.reversed.toList()[index];
                       final isMine = msg.isMine(_data.currentUserId!);
                       return MessageBubble(
                         message: msg,
