@@ -652,11 +652,7 @@ async function start() {
     await db.$executeRawUnsafe('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "coins" INTEGER NOT NULL DEFAULT 0');
     console.log('Schema updated');
   } catch (_) {}
-  try {
-    await db.$executeRawUnsafe('TRUNCATE TABLE users CASCADE');
-    console.log('Cleaned old user data');
-  } catch (_) {}
-  // Создаём бота для PlantCoin
+  // Сначала создаём бота (его не удаляем)
   try {
     await db.user.upsert({
       where: { nickname: 'plantcoin_bot' },
@@ -669,6 +665,10 @@ async function start() {
       update: {},
     });
     console.log('PlantCoin bot created');
+  } catch (_) {}
+  try {
+    await db.$executeRawUnsafe('DELETE FROM users WHERE nickname NOT IN (\'plantcoin_bot\')');
+    console.log('Cleaned old user data');
   } catch (_) {}
   await seedDemoUsers();
   server.listen(PORT, '0.0.0.0', () => {
