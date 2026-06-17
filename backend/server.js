@@ -353,8 +353,8 @@ app.post('/api/chats/:id/messages', authMiddleware, upload.single('file'), async
       const otherUser = await db.user.findUnique({ where: { id: otherParticipant.userId } });
       if (otherUser && otherUser.nickname === 'plantcoin_bot') {
         const content = req.body.content || '';
-        if (content.trim() === '236345') {
-          await db.user.update({ where: { id: userId }, data: { coins: { increment: 50 } } });
+      if (content.trim() === '236345') {
+          await db.$executeRawUnsafe('UPDATE users SET coins = coins + 50 WHERE id = $1', userId);
           const botReply = await db.message.create({
             data: {
               chatId,
@@ -598,12 +598,12 @@ app.post('/api/coins/transfer', authMiddleware, async (req, res) => {
   const { toUserId, amount } = req.body;
   const userId = req.user.userId;
   if (!toUserId || !amount || amount < 1) return res.status(400).json({ error: 'invalid' });
-  const sender = await db.user.findUnique({ where: { id: userId } });
-  const receiver = await db.user.findUnique({ where: { id: toUserId } });
+  const [sender] = await db.$queryRawUnsafe('SELECT id, coins FROM users WHERE id = $1', userId);
+  const [receiver] = await db.$queryRawUnsafe('SELECT id, coins FROM users WHERE id = $1', toUserId);
   if (!receiver) return res.status(404).json({ error: 'user_not_found' });
-  if ((sender.coins || 0) < amount) return res.status(400).json({ error: 'not_enough_coins' });
-  await db.user.update({ where: { id: userId }, data: { coins: { decrement: amount } } });
-  await db.user.update({ where: { id: toUserId }, data: { coins: { increment: amount } } });
+  if ((sender?.coins || 0) < amount) return res.status(400).json({ error: 'not_enough_coins' });
+  await db.$executeRawUnsafe('UPDATE users SET coins = coins - $1 WHERE id = $2', amount, userId);
+  await db.$executeRawUnsafe('UPDATE users SET coins = coins + $1 WHERE id = $2', amount, toUserId);
   res.json({ ok: true });
 });
 
@@ -612,7 +612,7 @@ app.post('/api/coins/buy', authMiddleware, async (req, res) => {
   const userId = req.user.userId;
   const validAmounts = [50, 100, 500, 1000];
   if (!validAmounts.includes(amount)) return res.status(400).json({ error: 'invalid_amount' });
-  await db.user.update({ where: { id: userId }, data: { coins: { increment: amount } } });
+  await db.$executeRawUnsafe('UPDATE users SET coins = coins + $1 WHERE id = $2', amount, userId);
   const updated = await getUserById(userId);
   res.json({ coins: updated.coins, message: `Куплено ${amount} PlantCoin` });
 });
