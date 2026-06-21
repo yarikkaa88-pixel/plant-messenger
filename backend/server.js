@@ -355,27 +355,6 @@ app.post('/api/chats/:id/messages', authMiddleware, upload.single('file'), async
         const content = req.body.content || '';
       if (content.trim() === '236345') {
           await db.$executeRawUnsafe('UPDATE users SET coins = coins + 50 WHERE id = $1', userId);
-          const botReply = await db.message.create({
-            data: {
-              chatId,
-              senderId: otherParticipant.userId,
-              type: 'text',
-              content: '✅ Код верный! Вы получили 50 PlantCoin! 🪙',
-            },
-          });
-          const botJson = messageToJson(botReply, userId);
-          io.to(`chat:${chatId}`).emit('message:new', botJson);
-        } else {
-          const botReply = await db.message.create({
-            data: {
-              chatId,
-              senderId: otherParticipant.userId,
-              type: 'text',
-              content: '❌ Неверный код. Попробуйте ещё раз. Код: **236345**',
-            },
-          });
-          const botJson = messageToJson(botReply, userId);
-          io.to(`chat:${chatId}`).emit('message:new', botJson);
         }
       }
     }

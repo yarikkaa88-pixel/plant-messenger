@@ -404,6 +404,104 @@ class _ProfileTabState extends State<_ProfileTab> {
     }
   }
 
+  Future<void> _showSendCoinsDialog() async {
+    final data = PlantDataService.instance;
+    final user = data.currentUser;
+    if (user == null || user.coins <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('У вас нет монет для отправки'), backgroundColor: Colors.orange),
+        );
+      }
+      return;
+    }
+
+    final nicknameController = TextEditingController();
+    final amountController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Отправить PlantCoin'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nicknameController,
+              decoration: const InputDecoration(
+                labelText: 'Ник получателя',
+                hintText: 'Введите ник пользователя',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountController,
+              decoration: const InputDecoration(
+                labelText: 'Количество',
+                hintText: 'Сколько монет отправить',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Отправить')),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      final nickname = nicknameController.text.trim();
+      final amountText = amountController.text.trim();
+      if (nickname.isEmpty || amountText.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Заполните все поля'), backgroundColor: Colors.red),
+        );
+        return;
+      }
+      final amount = int.tryParse(amountText);
+      if (amount == null || amount <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Введите корректное количество'), backgroundColor: Colors.red),
+        );
+        return;
+      }
+      if (amount > (user.coins)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Недостаточно монет'), backgroundColor: Colors.red),
+        );
+        return;
+      }
+
+      try {
+        // Ищем пользователя по нику
+        final users = await data.searchUsers(nickname);
+        final found = users.where((u) => u.nickname.toLowerCase() == nickname.toLowerCase()).toList();
+        if (found.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Пользователь не найден'), backgroundColor: Colors.red),
+            );
+          }
+          return;
+        }
+        await data.transferCoins(found.first.id, amount);
+        setState(() {});
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Отправлено $amount PlantCoin пользователю ${found.first.nickname}'), backgroundColor: const Color(0xFFFFD700)),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _toggleHidePhone() async {
     await PlantDataService.instance.updateProfile(
       hidePhone: !_hidePhone,
@@ -512,6 +610,16 @@ class _ProfileTabState extends State<_ProfileTab> {
                   ),
                   trailing: const Icon(Icons.chevron_right, color: PlantColors.forest),
                   onTap: _showBuyMenu,
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  leading: const Icon(Icons.send, color: Color(0xFFFFD700)),
+                  title: Text(
+                    'Отправить PlantCoin',
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: PlantColors.darkGreen),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, color: PlantColors.forest),
+                  onTap: _showSendCoinsDialog,
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 SwitchListTile(

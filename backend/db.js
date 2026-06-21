@@ -36,8 +36,11 @@ function userToJson(row) {
 }
 
 async function getUserById(id) {
-  const user = await db.user.findUnique({ where: { id } });
-  return userToJson(user);
+  const [user] = await db.$queryRawUnsafe(
+    'SELECT id, nickname, phone, "avatarColor" as "avatarColor", "avatar_path" as "avatarPath", "hide_phone" as "hidePhone", coins FROM users WHERE id = $1',
+    id
+  );
+  return userToJson(user || null);
 }
 
 function normalizePhone(phone) {
